@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code/code"
 	"context"
 	"fmt"
 	"os"
@@ -9,6 +10,8 @@ import (
 )
 
 func main() {
+	var Format code.Format = code.Stylish
+
 	cmd := &cli.Command{
 		Name: "gendiff",
 
@@ -21,6 +24,24 @@ func main() {
 				Usage:       "output format",
 				DefaultText: "stylish",
 			},
+		},
+
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cmd.NArg() < 1 {
+				return fmt.Errorf("ошибка: не указан путь к файлу или директории")
+			}
+
+			filepath1 := cmd.Args().First()
+			filepath2 := cmd.Args().Get(1)
+
+			result, err := code.GenDiff(filepath1, filepath2, Format)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s\t%s | %s", result, filepath1, filepath2)
+
+			return nil
 		},
 	}
 
