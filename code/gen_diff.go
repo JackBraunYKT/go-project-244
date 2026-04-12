@@ -3,8 +3,10 @@ package code
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -14,7 +16,7 @@ const (
 	Stylish Format = "stylish"
 )
 
-func GenDiff(filepath1, filepath2 string, format Format) (map[string]interface{}, error) {
+func GenDiff(filepath1, filepath2 string, format Format) (*string, error) {
 	data1, err := readFile(filepath1)
 	if err != nil {
 		return nil, err
@@ -42,10 +44,9 @@ func GenDiff(filepath1, filepath2 string, format Format) (map[string]interface{}
 		return nil, err
 	}
 
-	fmt.Println(parsed2)
+	result := genDiff(parsed1, parsed2)
 
-	// дальше будет diff (позже)
-	return parsed1, nil
+	return &result, nil
 }
 
 func readFile(path string) ([]byte, error) {
@@ -83,4 +84,33 @@ func parseJSON(data []byte) (map[string]interface{}, error) {
 	}
 
 	return result, nil
+}
+
+func genDiff(parsedData1, parsedData2 map[string]interface{}) string {
+	fmt.Println(parsedData1)
+	fmt.Println(parsedData2)
+
+	keys := getMergedSortedKeys(parsedData1, parsedData2)
+
+	var result string
+
+	for k, v := range parsedData1 {
+
+	}
+
+	return result
+}
+
+func getMergedSortedKeys(m1, m2 map[string]interface{}) []string {
+	keys := slices.Collect(maps.Keys(m1))
+
+	for k := range m2 {
+		if _, ok := m1[k]; !ok {
+			keys = append(keys, k)
+		}
+	}
+
+	slices.Sort(keys)
+
+	return keys
 }

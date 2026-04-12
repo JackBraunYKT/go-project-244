@@ -39,7 +39,7 @@ func main() {
 				return err
 			}
 
-			fmt.Printf("%s\t%s | %s", result, filepath1, filepath2)
+			fmt.Printf("%s", *result)
 
 			return nil
 		},
