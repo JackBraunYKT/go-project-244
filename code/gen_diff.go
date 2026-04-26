@@ -6,7 +6,9 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
+	"sort"
 	"strings"
 )
 
@@ -44,9 +46,13 @@ func GenDiff(filepath1, filepath2 string, format Format) (*string, error) {
 		return nil, err
 	}
 
-	result := genDiff(parsed1, parsed2)
+	nodes := buildDiffNodes(parsed1, parsed2)
+	formattedNodes, err := formatNodes(nodes, format, 1)
+	if err != nil {
+		return nil, err
+	}
 
-	return &result, nil
+	return formattedNodes, nil
 }
 
 func readFile(path string) ([]byte, error) {
@@ -86,31 +92,144 @@ func parseJSON(data []byte) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func genDiff(parsedData1, parsedData2 map[string]interface{}) string {
-	fmt.Println(parsedData1)
-	fmt.Println(parsedData2)
+type DiffNode struct {
+	Key      string
+	Type     string
+	OldValue interface{}
+	NewValue interface{}
+	Children []DiffNode
+}
 
-	keys := getMergedSortedKeys(parsedData1, parsedData2)
+const (
+	NodeAdded     = "added"
+	NodeRemoved   = "removed"
+	NodeUnchanged = "unchanged"
+	NodeChanged   = "changed"
+	NodeNested    = "nested"
+)
 
-	var result string
+func buildDiffNodes(data1, data2 map[string]interface{}) []DiffNode {
+	keys := getMergedSortedKeys(data1, data2)
+	nodes := make([]DiffNode, 0, len(keys))
 
-	for k, v := range parsedData1 {
+	for _, key := range keys {
+		value1, ok1 := data1[key]
+		value2, ok2 := data2[key]
 
+		node := DiffNode{
+			Key: key,
+		}
+
+		switch {
+		case !ok1:
+			node.Type = NodeAdded
+			node.NewValue = value2
+		case !ok2:
+			node.Type = NodeRemoved
+			node.OldValue = value1
+		default:
+			map1, isMap1 := value1.(map[string]interface{})
+			map2, isMap2 := value2.(map[string]interface{})
+
+			if isMap1 && isMap2 {
+				node.Type = NodeNested
+				node.Children = buildDiffNodes(map1, map2)
+			} else if reflect.DeepEqual(value1, value2) {
+				node.Type = NodeUnchanged
+				node.OldValue = value1
+			} else {
+				node.Type = NodeChanged
+				node.OldValue = value1
+				node.NewValue = value2
+			}
+		}
+		nodes = append(nodes, node)
 	}
 
-	return result
+	return nodes
 }
 
 func getMergedSortedKeys(m1, m2 map[string]interface{}) []string {
 	keys := slices.Collect(maps.Keys(m1))
 
-	for k := range m2 {
-		if _, ok := m1[k]; !ok {
-			keys = append(keys, k)
+	for key := range m2 {
+		if _, ok := m1[key]; !ok {
+			keys = append(keys, key)
 		}
 	}
 
 	slices.Sort(keys)
 
+	return keys
+}
+
+func formatNodes(nodes []DiffNode, format Format, depth int) (*string, error) {
+	switch format {
+	case Stylish:
+		result := formatStylish(nodes, depth)
+		return &result, nil
+	default:
+		return nil, fmt.Errorf("unsupported format: %s", format)
+	}
+}
+
+func formatStylish(nodes []DiffNode, depth int) string {
+	indent := strings.Repeat("    ", depth-1)
+	signIndent := indent + "  "
+	lines := []string{"{"}
+
+	for _, node := range nodes {
+		switch node.Type {
+		case NodeAdded:
+			lines = append(lines, fmt.Sprintf("%s+ %s: %s", signIndent, node.Key, stringify(node.NewValue, depth)))
+		case NodeRemoved:
+			lines = append(lines, fmt.Sprintf("%s- %s: %s", signIndent, node.Key, stringify(node.OldValue, depth)))
+		case NodeUnchanged:
+			lines = append(lines, fmt.Sprintf("%s  %s: %s", signIndent, node.Key, stringify(node.OldValue, depth)))
+		case NodeChanged:
+			lines = append(lines, fmt.Sprintf("%s- %s: %s", signIndent, node.Key, stringify(node.OldValue, depth)))
+			lines = append(lines, fmt.Sprintf("%s+ %s: %s", signIndent, node.Key, stringify(node.NewValue, depth)))
+		case NodeNested:
+			lines = append(lines, fmt.Sprintf("%s  %s: %s", signIndent, node.Key, formatStylish(node.Children, depth+1)))
+		}
+	}
+
+	lines = append(lines, indent+"}")
+	return strings.Join(lines, "\n")
+}
+
+func stringify(value interface{}, depth int) string {
+	switch v := value.(type) {
+	case map[string]interface{}:
+		keys := getSortedKeys(v)
+		indent := strings.Repeat("    ", depth)
+		lines := []string{"{"}
+
+		for _, key := range keys {
+			lines = append(lines, fmt.Sprintf("%s    %s: %s", indent, key, stringify(v[key], depth+1)))
+		}
+
+		lines = append(lines, indent+"}")
+		return strings.Join(lines, "\n")
+	case nil:
+		return "null"
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case string:
+		return v
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
+func getSortedKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	return keys
 }
