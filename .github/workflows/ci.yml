@@ -5,12 +5,14 @@ on:
   pull_request:
     branches: ["main"]
 jobs:
-  lint:
+  check:
+    name: Build and Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
 
-      - name: setup GO
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.25.x"
