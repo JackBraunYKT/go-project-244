@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -22,4 +22,3 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
-        run: make lint
