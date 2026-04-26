@@ -1,19 +1,23 @@
 package formatters
 
 import (
-	"code/differ"
+	"code/internal/differ"
 	"fmt"
 )
 
-type Format string
-
 const (
-	Stylish Format = "stylish"
-	Plain   Format = "plain"
-	JSON    Format = "json"
+	Stylish = "stylish"
+	Plain   = "plain"
+	JSON    = "json"
 )
 
-func FormatNodes(nodes []differ.DiffNode, format Format, depth int) (*string, error) {
+var SupportedFormats = []string{
+	Stylish,
+	Plain,
+	JSON,
+}
+
+func FormatNodes(nodes []differ.DiffNode, format string, depth int) (*string, error) {
 	var result string
 
 	switch format {

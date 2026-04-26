@@ -1,7 +1,7 @@
 package formatters
 
 import (
-	"code/differ"
+	"code/internal/differ"
 	"fmt"
 	"sort"
 	"strings"

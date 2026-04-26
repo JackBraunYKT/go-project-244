@@ -1,9 +1,10 @@
 package code
 
 import (
-	"code/differ"
-	"code/formatters"
-	"code/parsers"
+	"code/internal/differ"
+	"code/internal/formatters"
+	"code/internal/parsers"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,7 +17,18 @@ const (
 	Stylish Format = "stylish"
 )
 
-func GenDiff(filepath1, filepath2 string, format formatters.Format) (*string, error) {
+var (
+	ErrEmptyPath = errors.New("file path cannot be empty")
+)
+
+func GenDiff(filepath1, filepath2 string, format string) (*string, error) {
+	if filepath1 == "" {
+		return nil, fmt.Errorf("first file: %w", ErrEmptyPath)
+	}
+	if filepath2 == "" {
+		return nil, fmt.Errorf("second file: %w", ErrEmptyPath)
+	}
+
 	data1, err := readFile(filepath1)
 	if err != nil {
 		return nil, err

@@ -1,7 +1,7 @@
 package formatters
 
 import (
-	"code/differ"
+	"code/internal/differ"
 	"fmt"
 	"strings"
 )
@@ -9,7 +9,12 @@ import (
 func FormatPlain(diff []differ.DiffNode, path string) string {
 	var lines []string
 	for _, node := range diff {
-		fullPath := path + "." + node.Key
+		var fullPath string
+		if path == "" {
+			fullPath = node.Key
+		} else {
+			fullPath = path + "." + node.Key
+		}
 		switch node.Type {
 		case differ.NodeAdded:
 			lines = append(lines, fmt.Sprintf(
@@ -26,7 +31,7 @@ func FormatPlain(diff []differ.DiffNode, path string) string {
 				fullPath, formatPlainValue(node.OldValue), formatPlainValue(node.NewValue),
 			))
 		case differ.NodeNested:
-			lines = append(lines, FormatPlain(node.Children, node.Key))
+			lines = append(lines, FormatPlain(node.Children, fullPath))
 		}
 	}
 	return strings.Join(lines, "\n")

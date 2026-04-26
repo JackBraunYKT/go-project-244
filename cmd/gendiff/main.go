@@ -2,7 +2,6 @@ package main
 
 import (
 	"code"
-	"code/formatters"
 	"context"
 	"fmt"
 	"os"
@@ -12,8 +11,6 @@ import (
 
 func main() {
 	// var Format formatters.Format = formatters.Stylish
-	Format := formatters.JSON
-
 	cmd := &cli.Command{
 		Name: "gendiff",
 
@@ -29,14 +26,17 @@ func main() {
 		},
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if cmd.NArg() < 1 {
+			if cmd.NArg() < 2 {
 				return fmt.Errorf("ошибка: не указан путь к файлу или директории")
 			}
 
-			filepath1 := cmd.Args().First()
-			filepath2 := cmd.Args().Get(1)
+			args := cmd.Args()
 
-			result, err := code.GenDiff(filepath1, filepath2, Format)
+			filepath1 := args.Get(0)
+			filepath2 := args.Get(1)
+			format := cmd.String("format")
+
+			result, err := code.GenDiff(filepath1, filepath2, format)
 			if err != nil {
 				return err
 			}
