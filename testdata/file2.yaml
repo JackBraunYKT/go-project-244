@@ -1,0 +1,8 @@
+---
+timeout: 20
+verbose: true
+host: hexlet.io
+inner_value:
+  timeout: 20
+  verbose: true
+  host: hexlet.io

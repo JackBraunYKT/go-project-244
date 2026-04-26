@@ -1,7 +1,8 @@
 package main
 
 import (
-	"code/code"
+	"code"
+	"code/formatters"
 	"context"
 	"fmt"
 	"os"
@@ -10,7 +11,8 @@ import (
 )
 
 func main() {
-	var Format code.Format = code.Stylish
+	// var Format formatters.Format = formatters.Stylish
+	Format := formatters.JSON
 
 	cmd := &cli.Command{
 		Name: "gendiff",

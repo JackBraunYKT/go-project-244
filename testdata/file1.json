@@ -2,5 +2,15 @@
   "host": "hexlet.io",
   "timeout": 50,
   "proxy": "123.234.53.22",
-  "follow": false
+  "follow": false,
+  "inner_value": {
+    "timeout": 30,
+    "verbose": true,
+    "host": "hexlet.io",
+    "val2": {
+      "timeout": 30,
+      "verbose": true,
+      "host": "hexlet.io"
+    }
+  }
 }
