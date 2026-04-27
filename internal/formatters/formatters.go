@@ -24,7 +24,7 @@ func FormatNodes(nodes []differ.DiffNode, format string, depth int) (*string, er
 	case Stylish:
 		result = FormatStylish(nodes, depth)
 	case Plain:
-		result = FormatPlain(nodes, "common")
+		result = FormatPlain(nodes, "")
 	case JSON:
 		formattedNodes, err := FormatJSON(nodes)
 		if err != nil {
