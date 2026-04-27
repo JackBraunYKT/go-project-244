@@ -41,7 +41,7 @@ func main() {
 				return err
 			}
 
-			fmt.Printf("%s", *result)
+			fmt.Printf("%s", result)
 
 			return nil
 		},
