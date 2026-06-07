@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type Format string
@@ -45,10 +44,6 @@ func GenDiff(filepath1, filepath2 string, format string) (string, error) {
 
 	ext1 := filepath.Ext(filepath1)
 	ext2 := filepath.Ext(filepath2)
-
-	if !strings.EqualFold(ext1, ext2) {
-		return "", fmt.Errorf("files have different extensions")
-	}
 
 	parser1, err := parsers.NewParser(ext1)
 	if err != nil {

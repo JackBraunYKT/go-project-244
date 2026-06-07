@@ -15,6 +15,7 @@ type diffTestCase struct {
 	file2        string
 	expectedFile string
 	expectErr    bool
+	errContains  string
 	format       string
 }
 
@@ -77,8 +78,8 @@ func TestGenDiff_YAML(t *testing.T) {
 	tests := []diffTestCase{
 		{
 			name:         "Flat diff",
-			file1:        fixturePath("flat_file1.yml"),
-			file2:        fixturePath("flat_file2.yml"),
+			file1:        fixturePath("flat_file1.yaml"),
+			file2:        fixturePath("flat_file2.yaml"),
 			expectedFile: "flat_diff.txt",
 		},
 		{
@@ -132,14 +133,14 @@ func TestGenDiff_Mixed(t *testing.T) {
 	tests := []diffTestCase{
 		{
 			name:         "YAML and JSON mixed",
-			file1:        fixturePath("file1.yml"),
-			file2:        fixturePath("file2.json"),
+			file1:        fixturePath("flat_file1.yaml"),
+			file2:        fixturePath("flat_file2.json"),
 			expectedFile: "flat_diff.txt",
 		},
 		{
 			name:         "JSON and YAML mixed",
-			file1:        fixturePath("file1.json"),
-			file2:        fixturePath("file2.yml"),
+			file1:        fixturePath("flat_file1.json"),
+			file2:        fixturePath("flat_file2.yaml"),
 			expectedFile: "flat_diff.txt",
 		},
 	}
@@ -151,8 +152,8 @@ func TestGenDiff_Plain(t *testing.T) {
 	tests := []diffTestCase{
 		{
 			name:         "Flat diff plain format",
-			file1:        fixturePath("file1.json"),
-			file2:        fixturePath("file2.json"),
+			file1:        fixturePath("flat_file1.json"),
+			file2:        fixturePath("flat_file2.json"),
 			expectedFile: "flat_diff_plain.txt",
 			format:       "plain",
 		},
@@ -172,8 +173,8 @@ func TestGenDiff_JSONFormat(t *testing.T) {
 	tests := []diffTestCase{
 		{
 			name:         "Flat diff json format",
-			file1:        fixturePath("file1.json"),
-			file2:        fixturePath("file2.json"),
+			file1:        fixturePath("flat_file1.json"),
+			file2:        fixturePath("flat_file2.json"),
 			expectedFile: "flat_diff_json.txt",
 			format:       "json",
 		},
@@ -192,35 +193,40 @@ func TestGenDiff_JSONFormat(t *testing.T) {
 func TestGenDiff_Errors(t *testing.T) {
 	tests := []diffTestCase{
 		{
-			name:      "Nonexistent file1",
-			file1:     fixturePath("nonexistent.json"),
-			file2:     fixturePath("file1.json"),
-			expectErr: true,
+			name:        "Nonexistent file1",
+			file1:       fixturePath("nonexistent.json"),
+			file2:       fixturePath("flat_file1.json"),
+			expectErr:   true,
+			errContains: "failed to stat file",
 		},
 		{
-			name:      "Nonexistent file2",
-			file1:     fixturePath("file1.json"),
-			file2:     fixturePath("nonexistent.json"),
-			expectErr: true,
+			name:        "Nonexistent file2",
+			file1:       fixturePath("flat_file1.json"),
+			file2:       fixturePath("nonexistent.json"),
+			expectErr:   true,
+			errContains: "failed to stat file",
 		},
 		{
-			name:      "Both nonexistent files",
-			file1:     fixturePath("nonexistent1.json"),
-			file2:     fixturePath("nonexistent2.json"),
-			expectErr: true,
+			name:        "Both nonexistent files",
+			file1:       fixturePath("nonexistent1.json"),
+			file2:       fixturePath("nonexistent2.json"),
+			expectErr:   true,
+			errContains: "failed to stat file",
 		},
 		{
-			name:      "Unsupported format",
-			file1:     fixturePath("file1.txt"),
-			file2:     fixturePath("file2.json"),
-			expectErr: true,
+			name:        "Unsupported input extension",
+			file1:       fixturePath("unsupported.txt"),
+			file2:       fixturePath("flat_file2.json"),
+			expectErr:   true,
+			errContains: "unsupported ext: .txt",
 		},
 		{
-			name:      "Unknown output format",
-			file1:     fixturePath("file1.json"),
-			file2:     fixturePath("file2.json"),
-			format:    "xml",
-			expectErr: true,
+			name:        "Unknown output format",
+			file1:       fixturePath("flat_file1.json"),
+			file2:       fixturePath("flat_file2.json"),
+			format:      "xml",
+			expectErr:   true,
+			errContains: "unsupported format: xml",
 		},
 	}
 
@@ -265,6 +271,9 @@ func runDiffTests(t *testing.T, tests []diffTestCase) {
 			result, err := GenDiff(tt.file1, tt.file2, tt.format)
 			if tt.expectErr {
 				require.Error(t, err)
+				if tt.errContains != "" {
+					require.ErrorContains(t, err, tt.errContains)
+				}
 				return
 			}
 

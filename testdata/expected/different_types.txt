@@ -1,0 +1,11 @@
+{
+  - boolean: true
+  + boolean: false
+  - float: 3.14
+  + float: 2.71
+    null: null
+  - number: 42
+  + number: 100
+  - string: value
+  + string: different
+}
