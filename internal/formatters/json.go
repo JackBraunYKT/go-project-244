@@ -7,29 +7,29 @@ import (
 )
 
 type jsonDiffNode struct {
-	Key      string           `json:"key"`
-	Type     string           `json:"type"`
-	Value    *json.RawMessage `json:"value,omitempty"`
-	OldValue *json.RawMessage `json:"oldValue,omitempty"`
-	NewValue *json.RawMessage `json:"newValue,omitempty"`
-	Children *[]jsonDiffNode  `json:"children,omitempty"`
+	Key      string         `json:"key"`
+	Type     string         `json:"type"`
+	Value1   interface{}    `json:"value1,omitempty"`
+	Value2   interface{}    `json:"value2,omitempty"`
+	Children []jsonDiffNode `json:"children,omitempty"`
 }
 
 func FormatJSON(diff []differ.DiffNode) (string, error) {
-	nodes, err := buildJSONDiffNodes(diff)
-	if err != nil {
-		return "", err
+	root := jsonDiffNode{
+		Key:      "",
+		Type:     "root",
+		Children: buildJSONDiffNodes(diff),
 	}
 
-	data, err := json.MarshalIndent(nodes, "", "  ")
+	data, err := json.MarshalIndent(root, "", "  ")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to marshal JSON diff: %w", err)
 	}
 
 	return string(data), nil
 }
 
-func buildJSONDiffNodes(diff []differ.DiffNode) ([]jsonDiffNode, error) {
+func buildJSONDiffNodes(diff []differ.DiffNode) []jsonDiffNode {
 	nodes := make([]jsonDiffNode, 0, len(diff))
 
 	for _, node := range diff {
@@ -40,50 +40,21 @@ func buildJSONDiffNodes(diff []differ.DiffNode) ([]jsonDiffNode, error) {
 
 		switch node.Type {
 		case differ.NodeAdded:
-			value, err := marshalJSONValue(node.NewValue)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal added value for key %q: %w", node.Key, err)
-			}
-			jsonNode.Value = value
+			jsonNode.Value2 = node.NewValue
 		case differ.NodeRemoved, differ.NodeUnchanged:
-			value, err := marshalJSONValue(node.OldValue)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal value for key %q: %w", node.Key, err)
+			if node.Type == differ.NodeRemoved {
+				jsonNode.Type = "deleted"
 			}
-			jsonNode.Value = value
+			jsonNode.Value1 = node.OldValue
 		case differ.NodeChanged:
-			oldValue, err := marshalJSONValue(node.OldValue)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal old value for key %q: %w", node.Key, err)
-			}
-			newValue, err := marshalJSONValue(node.NewValue)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal new value for key %q: %w", node.Key, err)
-			}
-			jsonNode.OldValue = oldValue
-			jsonNode.NewValue = newValue
+			jsonNode.Value1 = node.OldValue
+			jsonNode.Value2 = node.NewValue
 		case differ.NodeNested:
-			children, err := buildJSONDiffNodes(node.Children)
-			if err != nil {
-				return nil, err
-			}
-			jsonNode.Children = &children
-		default:
-			return nil, fmt.Errorf("unknown diff node type %q for key %q", node.Type, node.Key)
+			jsonNode.Children = buildJSONDiffNodes(node.Children)
 		}
 
 		nodes = append(nodes, jsonNode)
 	}
 
-	return nodes, nil
-}
-
-func marshalJSONValue(value any) (*json.RawMessage, error) {
-	data, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-
-	raw := json.RawMessage(data)
-	return &raw, nil
+	return nodes
 }
