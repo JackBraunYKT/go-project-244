@@ -19,130 +19,51 @@ type diffTestCase struct {
 	format       string
 }
 
-func TestGenDiff_JSON(t *testing.T) {
-	tests := []diffTestCase{
-		{
-			name:         "Flat diff",
-			file1:        fixturePath("flat_file1.json"),
-			file2:        fixturePath("flat_file2.json"),
-			expectedFile: "flat_diff.txt",
-		},
-		{
-			name:         "Same files",
-			file1:        fixturePath("same1.json"),
-			file2:        fixturePath("same2.json"),
-			expectedFile: "same.txt",
-		},
-		{
-			name:         "Empty files",
-			file1:        fixturePath("empty1.json"),
-			file2:        fixturePath("empty2.json"),
-			expectedFile: "empty.txt",
-		},
-		{
-			name:         "Empty vs filled",
-			file1:        fixturePath("empty_vs_filled1.json"),
-			file2:        fixturePath("empty_vs_filled2.json"),
-			expectedFile: "empty_vs_filled.txt",
-		},
-		{
-			name:         "Only deleted",
-			file1:        fixturePath("only_deleted.json"),
-			file2:        fixturePath("only_added.json"),
-			expectedFile: "only_deleted.txt",
-		},
-		{
-			name:         "Only added",
-			file1:        fixturePath("only_added.json"),
-			file2:        fixturePath("only_deleted.json"),
-			expectedFile: "only_added.txt",
-		},
-		{
-			name:         "Different types",
-			file1:        fixturePath("different_types.json"),
-			file2:        fixturePath("different_types2.json"),
-			expectedFile: "different_types.txt",
-		},
-		{
-			name:         "Completely different",
-			file1:        fixturePath("completely_different1.json"),
-			file2:        fixturePath("completely_different2.json"),
-			expectedFile: "completely_different.txt",
-		},
-	}
+type baseDiffTestCase struct {
+	name         string
+	file1        string
+	file2        string
+	expectedFile string
+}
 
-	runDiffTests(t, tests)
+type fixtureFileSet struct {
+	extension       string
+	extensionByFile map[string]string
+	expectedByCase  map[string]string
+}
+
+var commonDiffTestCases = []baseDiffTestCase{
+	{"Flat diff", "flat_file1", "flat_file2", "flat_diff.txt"},
+	{"Same files", "same1", "same2", "same.txt"},
+	{"Empty files", "empty1", "empty2", "empty.txt"},
+	{"Empty vs filled", "empty_vs_filled1", "empty_vs_filled2", "empty_vs_filled.txt"},
+	{"Only deleted", "only_deleted", "only_added", "only_deleted.txt"},
+	{"Only added", "only_added", "only_deleted", "only_added.txt"},
+	{"Different types", "different_types", "different_types2", "different_types.txt"},
+	{"Completely different", "completely_different1", "completely_different2", "completely_different.txt"},
+}
+
+func TestGenDiff_JSON(t *testing.T) {
+	runDiffTests(t, buildFixtureDiffCases(fixtureFileSet{extension: "json"}))
 }
 
 func TestGenDiff_YAML(t *testing.T) {
-	tests := []diffTestCase{
-		{
-			name:         "Flat diff",
-			file1:        fixturePath("flat_file1.yaml"),
-			file2:        fixturePath("flat_file2.yaml"),
-			expectedFile: "flat_diff.txt",
+	runDiffTests(t, buildFixtureDiffCases(fixtureFileSet{
+		extension: "yml",
+		extensionByFile: map[string]string{
+			"flat_file1": "yaml",
+			"flat_file2": "yaml",
 		},
-		{
-			name:         "Same files",
-			file1:        fixturePath("same1.yml"),
-			file2:        fixturePath("same2.yml"),
-			expectedFile: "same.txt",
+		expectedByCase: map[string]string{
+			"Different types": "different_types_yaml.txt",
 		},
-		{
-			name:         "Empty files",
-			file1:        fixturePath("empty1.yml"),
-			file2:        fixturePath("empty2.yml"),
-			expectedFile: "empty.txt",
-		},
-		{
-			name:         "Empty vs filled",
-			file1:        fixturePath("empty_vs_filled1.yml"),
-			file2:        fixturePath("empty_vs_filled2.yml"),
-			expectedFile: "empty_vs_filled.txt",
-		},
-		{
-			name:         "Only deleted",
-			file1:        fixturePath("only_deleted.yml"),
-			file2:        fixturePath("only_added.yml"),
-			expectedFile: "only_deleted.txt",
-		},
-		{
-			name:         "Only added",
-			file1:        fixturePath("only_added.yml"),
-			file2:        fixturePath("only_deleted.yml"),
-			expectedFile: "only_added.txt",
-		},
-		{
-			name:         "Different types",
-			file1:        fixturePath("different_types.yml"),
-			file2:        fixturePath("different_types2.yml"),
-			expectedFile: "different_types_yaml.txt",
-		},
-		{
-			name:         "Completely different",
-			file1:        fixturePath("completely_different1.yml"),
-			file2:        fixturePath("completely_different2.yml"),
-			expectedFile: "completely_different.txt",
-		},
-	}
-
-	runDiffTests(t, tests)
+	}))
 }
 
 func TestGenDiff_Mixed(t *testing.T) {
 	tests := []diffTestCase{
-		{
-			name:         "YAML and JSON mixed",
-			file1:        fixturePath("flat_file1.yaml"),
-			file2:        fixturePath("flat_file2.json"),
-			expectedFile: "flat_diff.txt",
-		},
-		{
-			name:         "JSON and YAML mixed",
-			file1:        fixturePath("flat_file1.json"),
-			file2:        fixturePath("flat_file2.yaml"),
-			expectedFile: "flat_diff.txt",
-		},
+		diffCase("YAML and JSON mixed", "flat_file1.yaml", "flat_file2.json", "flat_diff.txt"),
+		diffCase("JSON and YAML mixed", "flat_file1.json", "flat_file2.yaml", "flat_diff.txt"),
 	}
 
 	runDiffTests(t, tests)
@@ -150,20 +71,8 @@ func TestGenDiff_Mixed(t *testing.T) {
 
 func TestGenDiff_Plain(t *testing.T) {
 	tests := []diffTestCase{
-		{
-			name:         "Flat diff plain format",
-			file1:        fixturePath("flat_file1.json"),
-			file2:        fixturePath("flat_file2.json"),
-			expectedFile: "flat_diff_plain.txt",
-			format:       "plain",
-		},
-		{
-			name:         "Nested diff plain format",
-			file1:        fixturePath("nested1.json"),
-			file2:        fixturePath("nested2.json"),
-			expectedFile: "nested_plain.txt",
-			format:       "plain",
-		},
+		formattedDiffCase("Flat diff plain format", "flat_file1.json", "flat_file2.json", "flat_diff_plain.txt", "plain"),
+		formattedDiffCase("Nested diff plain format", "nested1.json", "nested2.json", "nested_plain.txt", "plain"),
 	}
 
 	runDiffTests(t, tests)
@@ -171,20 +80,8 @@ func TestGenDiff_Plain(t *testing.T) {
 
 func TestGenDiff_JSONFormat(t *testing.T) {
 	tests := []diffTestCase{
-		{
-			name:         "Flat diff json format",
-			file1:        fixturePath("flat_file1.json"),
-			file2:        fixturePath("flat_file2.json"),
-			expectedFile: "flat_diff_json.txt",
-			format:       "json",
-		},
-		{
-			name:         "Nested diff json format",
-			file1:        fixturePath("nested1.json"),
-			file2:        fixturePath("nested2.json"),
-			expectedFile: "nested_json.txt",
-			format:       "json",
-		},
+		formattedDiffCase("Flat diff json format", "flat_file1.json", "flat_file2.json", "flat_diff_json.txt", "json"),
+		formattedDiffCase("Nested diff json format", "nested1.json", "nested2.json", "nested_json.txt", "json"),
 	}
 
 	runDiffTests(t, tests)
@@ -192,74 +89,105 @@ func TestGenDiff_JSONFormat(t *testing.T) {
 
 func TestGenDiff_Errors(t *testing.T) {
 	tests := []diffTestCase{
-		{
-			name:        "Nonexistent file1",
-			file1:       fixturePath("nonexistent.json"),
-			file2:       fixturePath("flat_file1.json"),
-			expectErr:   true,
-			errContains: "failed to stat file",
-		},
-		{
-			name:        "Nonexistent file2",
-			file1:       fixturePath("flat_file1.json"),
-			file2:       fixturePath("nonexistent.json"),
-			expectErr:   true,
-			errContains: "failed to stat file",
-		},
-		{
-			name:        "Both nonexistent files",
-			file1:       fixturePath("nonexistent1.json"),
-			file2:       fixturePath("nonexistent2.json"),
-			expectErr:   true,
-			errContains: "failed to stat file",
-		},
-		{
-			name:        "Unsupported input extension",
-			file1:       fixturePath("unsupported.txt"),
-			file2:       fixturePath("flat_file2.json"),
-			expectErr:   true,
-			errContains: "unsupported ext: .txt",
-		},
-		{
-			name:        "Unknown output format",
-			file1:       fixturePath("flat_file1.json"),
-			file2:       fixturePath("flat_file2.json"),
-			format:      "xml",
-			expectErr:   true,
-			errContains: "unsupported format: xml",
-		},
+		errorDiffCase("Nonexistent file1", "nonexistent.json", "flat_file1.json", "failed to stat file"),
+		errorDiffCase("Nonexistent file2", "flat_file1.json", "nonexistent.json", "failed to stat file"),
+		errorDiffCase("Both nonexistent files", "nonexistent1.json", "nonexistent2.json", "failed to stat file"),
+		errorDiffCase("Unsupported input extension", "unsupported.txt", "flat_file2.json", "unsupported ext: .txt"),
+		formattedErrorDiffCase("Unknown output format", "flat_file1.json", "flat_file2.json", "xml", "unsupported format: xml"),
 	}
 
 	runDiffTests(t, tests)
 }
 
 func TestGenDiff_EmptyPaths(t *testing.T) {
-	_, err := GenDiff("", "file.json", "")
-	require.Error(t, err)
-	require.ErrorIs(t, err, ErrEmptyPath)
+	tests := []struct {
+		name  string
+		file1 string
+		file2 string
+	}{
+		{name: "Empty file1", file1: "", file2: "file.json"},
+		{name: "Empty file2", file1: "file.json", file2: ""},
+	}
 
-	_, err = GenDiff("file.json", "", "")
-	require.Error(t, err)
-	require.ErrorIs(t, err, ErrEmptyPath)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := GenDiff(tt.file1, tt.file2, "")
+			require.Error(t, err)
+			require.ErrorIs(t, err, ErrEmptyPath)
+		})
+	}
 }
 
 func TestGenDiff_Nested(t *testing.T) {
 	tests := []diffTestCase{
-		{
-			name:         "Nested JSON structures",
-			file1:        fixturePath("nested1.json"),
-			file2:        fixturePath("nested2.json"),
-			expectedFile: "nested.txt",
-		},
-		{
-			name:         "Nested YAML structures",
-			file1:        fixturePath("nested1.yml"),
-			file2:        fixturePath("nested2.yml"),
-			expectedFile: "nested.txt",
-		},
+		diffCase("Nested JSON structures", "nested1.json", "nested2.json", "nested.txt"),
+		diffCase("Nested YAML structures", "nested1.yml", "nested2.yml", "nested.txt"),
 	}
 
 	runDiffTests(t, tests)
+}
+
+func buildFixtureDiffCases(files fixtureFileSet) []diffTestCase {
+	tests := make([]diffTestCase, 0, len(commonDiffTestCases))
+
+	for _, tt := range commonDiffTestCases {
+		expectedFile := tt.expectedFile
+		if override, ok := files.expectedByCase[tt.name]; ok {
+			expectedFile = override
+		}
+
+		tests = append(tests, diffCase(
+			tt.name,
+			fixtureFileName(tt.file1, files),
+			fixtureFileName(tt.file2, files),
+			expectedFile,
+		))
+	}
+
+	return tests
+}
+
+func fixtureFileName(filename string, files fixtureFileSet) string {
+	extension := files.extension
+	if override, ok := files.extensionByFile[filename]; ok {
+		extension = override
+	}
+
+	return filename + "." + extension
+}
+
+func diffCase(name, file1, file2, expectedFile string) diffTestCase {
+	return diffTestCase{
+		name:         name,
+		file1:        fixturePath(file1),
+		file2:        fixturePath(file2),
+		expectedFile: expectedFile,
+	}
+}
+
+func formattedDiffCase(name, file1, file2, expectedFile, format string) diffTestCase {
+	test := diffCase(name, file1, file2, expectedFile)
+	test.format = format
+
+	return test
+}
+
+func errorDiffCase(name, file1, file2, errContains string) diffTestCase {
+	return diffTestCase{
+		name:        name,
+		file1:       fixturePath(file1),
+		file2:       fixturePath(file2),
+		expectErr:   true,
+		errContains: errContains,
+	}
+}
+
+func formattedErrorDiffCase(name, file1, file2, format, errContains string) diffTestCase {
+	test := errorDiffCase(name, file1, file2, errContains)
+	test.format = format
+
+	return test
 }
 
 func runDiffTests(t *testing.T, tests []diffTestCase) {
