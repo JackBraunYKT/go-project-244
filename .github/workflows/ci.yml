@@ -10,13 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.25.x"
+          go-version-file: go.mod
           cache: true
+          cache-dependency-path: go.sum
+
+      - name: Go version
+        run: go version
 
       - name: lint
         uses: golangci/golangci-lint-action@v9
