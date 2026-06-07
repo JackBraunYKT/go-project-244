@@ -22,7 +22,8 @@ jobs:
           cache: true
 
       - name: Run tests with coverage
-        run: make coverage
+        run: |
+          go test ./... -coverprofile=coverage.out
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
