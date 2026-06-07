@@ -7,4 +7,4 @@
 
 ### Demo
 
-https://asciinema.org/a/35sVgIqGqITdslZM
+[![Terminal demo](https://asciinema.org/a/35sVgIqGqITdslZM.svg)](https://asciinema.org/a/35sVgIqGqITdslZM)
