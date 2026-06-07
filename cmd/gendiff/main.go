@@ -18,10 +18,11 @@ func main() {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "Format",
+				Name:        "format",
 				Aliases:     []string{"f"},
 				Usage:       "output format",
 				DefaultText: "stylish",
+				Value:       "stylish",
 			},
 		},
 

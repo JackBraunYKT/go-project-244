@@ -23,6 +23,26 @@ func TestFormatNodes_Stylish(t *testing.T) {
 	}
 }
 
+func TestNewFormatter_Stylish(t *testing.T) {
+	formatter, err := NewFormatter(Stylish)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := formatter.(StylishFormatter); !ok {
+		t.Fatalf("expected StylishFormatter, got %T", formatter)
+	}
+
+	result, err := formatter.Format([]differ.DiffNode{
+		{Key: "host", Type: differ.NodeAdded, NewValue: "hexlet.io"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result, "+ host: hexlet.io") {
+		t.Errorf("expected stylish output, got:\n%s", result)
+	}
+}
+
 func TestFormatNodes_Plain(t *testing.T) {
 	nodes := []differ.DiffNode{
 		{Key: "host", Type: differ.NodeAdded, NewValue: "hexlet.io"},
@@ -34,6 +54,26 @@ func TestFormatNodes_Plain(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected non-nil result")
+	}
+}
+
+func TestNewFormatter_Plain(t *testing.T) {
+	formatter, err := NewFormatter(Plain)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := formatter.(PlainFormatter); !ok {
+		t.Fatalf("expected PlainFormatter, got %T", formatter)
+	}
+
+	result, err := formatter.Format([]differ.DiffNode{
+		{Key: "host", Type: differ.NodeAdded, NewValue: "hexlet.io"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result != "Property 'host' was added with value: 'hexlet.io'" {
+		t.Errorf("unexpected plain output:\n%s", result)
 	}
 }
 
@@ -54,6 +94,26 @@ func TestFormatNodes_JSON(t *testing.T) {
 	}
 }
 
+func TestNewFormatter_JSON(t *testing.T) {
+	formatter, err := NewFormatter(JSON)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := formatter.(JSONFormatter); !ok {
+		t.Fatalf("expected JSONFormatter, got %T", formatter)
+	}
+
+	result, err := formatter.Format([]differ.DiffNode{
+		{Key: "host", Type: differ.NodeAdded, NewValue: "hexlet.io"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(result, "hexlet.io") {
+		t.Errorf("expected json output, got:\n%s", result)
+	}
+}
+
 func TestFormatNodes_UnsupportedFormat(t *testing.T) {
 	nodes := []differ.DiffNode{}
 
@@ -63,6 +123,19 @@ func TestFormatNodes_UnsupportedFormat(t *testing.T) {
 	}
 	if result != nil {
 		t.Error("expected nil result on error")
+	}
+	if err.Error() != "unsupported format: xml" {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestNewFormatter_UnsupportedFormat(t *testing.T) {
+	formatter, err := NewFormatter("xml")
+	if err == nil {
+		t.Fatal("expected error for unsupported format, got nil")
+	}
+	if formatter != nil {
+		t.Errorf("expected nil formatter, got %T", formatter)
 	}
 	if err.Error() != "unsupported format: xml" {
 		t.Errorf("unexpected error message: %v", err)

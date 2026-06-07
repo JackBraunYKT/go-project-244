@@ -22,6 +22,10 @@ var (
 )
 
 func GenDiff(filepath1, filepath2 string, format string) (string, error) {
+	if format == "" {
+		format = formatters.Stylish
+	}
+
 	if filepath1 == "" {
 		return "", fmt.Errorf("first file: %w", ErrEmptyPath)
 	}
@@ -46,23 +50,38 @@ func GenDiff(filepath1, filepath2 string, format string) (string, error) {
 		return "", fmt.Errorf("files have different extensions")
 	}
 
-	parsed1, err := parsers.Parse(data1, ext1)
+	parser1, err := parsers.NewParser(ext1)
 	if err != nil {
 		return "", err
 	}
 
-	parsed2, err := parsers.Parse(data2, ext2)
+	parsed1, err := parser1.Parse(data1)
+	if err != nil {
+		return "", err
+	}
+
+	parser2, err := parsers.NewParser(ext2)
+	if err != nil {
+		return "", err
+	}
+
+	parsed2, err := parser2.Parse(data2)
 	if err != nil {
 		return "", err
 	}
 
 	nodes := differ.BuildDiffNodes(parsed1, parsed2)
-	formattedNodes, err := formatters.FormatNodes(nodes, format, 1)
+	formatter, err := formatters.NewFormatter(format)
 	if err != nil {
 		return "", err
 	}
 
-	return *formattedNodes, nil
+	result, err := formatter.Format(nodes)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
 
 func readFile(path string) ([]byte, error) {

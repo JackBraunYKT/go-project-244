@@ -25,6 +25,24 @@ func TestParse_JSON(t *testing.T) {
 	}
 }
 
+func TestNewParser_JSON(t *testing.T) {
+	parser, err := NewParser(".json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := parser.(JSONParser); !ok {
+		t.Fatalf("expected JSONParser, got %T", parser)
+	}
+
+	result, err := parser.Parse([]byte(`{"host": "hexlet.io"}`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result["host"] != "hexlet.io" {
+		t.Errorf("expected host = hexlet.io, got %v", result["host"])
+	}
+}
+
 func TestParse_YAML(t *testing.T) {
 	data := []byte("host: hexlet.io\ntimeout: 50\nverbose: true\n")
 
@@ -44,6 +62,24 @@ func TestParse_YAML(t *testing.T) {
 	}
 }
 
+func TestNewParser_YAML(t *testing.T) {
+	parser, err := NewParser(".yaml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := parser.(YAMLParser); !ok {
+		t.Fatalf("expected YAMLParser, got %T", parser)
+	}
+
+	result, err := parser.Parse([]byte("host: hexlet.io\n"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result["host"] != "hexlet.io" {
+		t.Errorf("expected host = hexlet.io, got %v", result["host"])
+	}
+}
+
 func TestParse_YML(t *testing.T) {
 	data := []byte("host: hexlet.io\n")
 
@@ -57,12 +93,35 @@ func TestParse_YML(t *testing.T) {
 	}
 }
 
+func TestNewParser_YML(t *testing.T) {
+	parser, err := NewParser(".yml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := parser.(YAMLParser); !ok {
+		t.Fatalf("expected YAMLParser, got %T", parser)
+	}
+}
+
 func TestParse_UnsupportedExt(t *testing.T) {
 	_, err := Parse([]byte("data"), ".xml")
 	if err == nil {
 		t.Fatal("expected error for unsupported ext, got nil")
 	}
 	if err.Error() != "unsupported ext: .xml" {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestNewParser_UnsupportedExt(t *testing.T) {
+	parser, err := NewParser(".toml")
+	if err == nil {
+		t.Fatal("expected error for unsupported ext, got nil")
+	}
+	if parser != nil {
+		t.Errorf("expected nil parser, got %T", parser)
+	}
+	if err.Error() != "unsupported ext: .toml" {
 		t.Errorf("unexpected error message: %v", err)
 	}
 }

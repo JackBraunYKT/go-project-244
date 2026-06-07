@@ -7,15 +7,40 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Parse(data []byte, ext string) (map[string]interface{}, error) {
+type Parser interface {
+	Parse([]byte) (map[string]interface{}, error)
+}
+
+type JSONParser struct{}
+
+func (JSONParser) Parse(data []byte) (map[string]interface{}, error) {
+	return parseJSON(data)
+}
+
+type YAMLParser struct{}
+
+func (YAMLParser) Parse(data []byte) (map[string]interface{}, error) {
+	return parseYAML(data)
+}
+
+func NewParser(ext string) (Parser, error) {
 	switch ext {
 	case ".json":
-		return parseJSON(data)
+		return JSONParser{}, nil
 	case ".yaml", ".yml":
-		return parseYAML(data)
+		return YAMLParser{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported ext: %s", ext)
 	}
+}
+
+func Parse(data []byte, ext string) (map[string]interface{}, error) {
+	parser, err := NewParser(ext)
+	if err != nil {
+		return nil, err
+	}
+
+	return parser.Parse(data)
 }
 
 func parseJSON(data []byte) (map[string]interface{}, error) {
