@@ -13,16 +13,19 @@ type Parser interface {
 
 type JSONParser struct{}
 
+// Parse разбирает JSON-данные в карту конфигурации.
 func (JSONParser) Parse(data []byte) (map[string]interface{}, error) {
 	return parseJSON(data)
 }
 
 type YAMLParser struct{}
 
+// Parse разбирает YAML-данные в карту конфигурации.
 func (YAMLParser) Parse(data []byte) (map[string]interface{}, error) {
 	return parseYAML(data)
 }
 
+// NewParser возвращает парсер для указанного расширения файла.
 func NewParser(ext string) (Parser, error) {
 	switch ext {
 	case ".json":
@@ -34,6 +37,7 @@ func NewParser(ext string) (Parser, error) {
 	}
 }
 
+// Parse разбирает данные в карту конфигурации с помощью парсера, выбранного по расширению файла.
 func Parse(data []byte, ext string) (map[string]interface{}, error) {
 	parser, err := NewParser(ext)
 	if err != nil {

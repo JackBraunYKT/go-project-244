@@ -25,6 +25,7 @@ type StylishFormatter struct {
 	Depth int
 }
 
+// Format преобразует узлы различий в формат stylish.
 func (f StylishFormatter) Format(nodes []differ.DiffNode) (string, error) {
 	depth := f.Depth
 	if depth == 0 {
@@ -36,16 +37,19 @@ func (f StylishFormatter) Format(nodes []differ.DiffNode) (string, error) {
 
 type PlainFormatter struct{}
 
+// Format преобразует узлы различий в текстовый формат plain.
 func (PlainFormatter) Format(nodes []differ.DiffNode) (string, error) {
 	return FormatPlain(nodes, ""), nil
 }
 
 type JSONFormatter struct{}
 
+// Format преобразует узлы различий в формат JSON.
 func (JSONFormatter) Format(nodes []differ.DiffNode) (string, error) {
 	return FormatJSON(nodes)
 }
 
+// NewFormatter возвращает форматтер для указанного формата вывода.
 func NewFormatter(format string) (Formatter, error) {
 	return newFormatter(format, 1)
 }
@@ -63,6 +67,7 @@ func newFormatter(format string, depth int) (Formatter, error) {
 	}
 }
 
+// FormatNodes форматирует узлы различий с указанным форматтером и начальной глубиной.
 func FormatNodes(nodes []differ.DiffNode, format string, depth int) (*string, error) {
 	formatter, err := newFormatter(format, depth)
 	if err != nil {

@@ -14,6 +14,7 @@ type jsonDiffNode struct {
 	Children []jsonDiffNode `json:"children,omitempty"`
 }
 
+// FormatJSON преобразует узлы различий в JSON-документ с отступами.
 func FormatJSON(diff []differ.DiffNode) (string, error) {
 	root := jsonDiffNode{
 		Key:      "",

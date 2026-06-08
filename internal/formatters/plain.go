@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// FormatPlain преобразует узлы различий в текст plain с указанным префиксом пути свойства.
 func FormatPlain(diff []differ.DiffNode, path string) string {
 	var lines []string
 	for _, node := range diff {

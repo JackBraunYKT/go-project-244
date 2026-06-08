@@ -20,6 +20,7 @@ var (
 	ErrEmptyPath = errors.New("file path cannot be empty")
 )
 
+// GenDiff сравнивает два конфигурационных файла и возвращает различия в указанном формате.
 func GenDiff(filepath1, filepath2 string, format string) (string, error) {
 	if format == "" {
 		format = formatters.Stylish

@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// FormatStylish преобразует узлы различий в дерево stylish с отступами.
 func FormatStylish(nodes []differ.DiffNode, depth int) string {
 	indent := strings.Repeat("    ", depth-1)
 	signIndent := indent + "  "

@@ -22,6 +22,7 @@ const (
 	NodeNested    = "nested"
 )
 
+// BuildDiffNodes строит отсортированное дерево узлов различий для двух разобранных конфигураций.
 func BuildDiffNodes(data1, data2 map[string]interface{}) []DiffNode {
 	keys := getMergedSortedKeys(data1, data2)
 	nodes := make([]DiffNode, 0, len(keys))
